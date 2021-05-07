@@ -22,8 +22,8 @@ Layer layer0 = {		/**< Layer with an orange circle */
   {0,0}, {0,0},				    /* next & last pos */
   COLOR_ORANGE,
   &layer1,
-};
-
+}
+  
 int
 main()
 {
