@@ -5,19 +5,31 @@
 #include <p2switches.h>
 #include <shape.h>
 #include <abCircle.h>
+#include "motion.h"
 
 #define GREEN_LED BIT6
 
 AbRect rect0 =  {abRectGetBounds, abRectCheck, {1,12}};
 
-u_int bgColor = COLOR_RED;
+AbRectOutline fieldOutline = {	/* playing field */
+  abRectOutlineGetBounds, abRectOutlineCheck,   
+  {screenWidth/2 - 10, screenHeight/2 - 10}
+};
 
-Layer layer0 = {
+Layer fieldLayer = {
+  (AbShape*)&fieldOutline,
+  {screenWidth/2, screenHeight/2},
+  {0,0},{0,0},
+  COLOR_BLACK,
+  0
+};
+
+Layer layer2 = {
   (AbShape *)&rect0,
   {2, screenHeight/2},
   {0,0}, {0,0},
   COLOR_GREEN,
-  0
+  &fieldLayer
 };
 
 Layer layer1 = {
@@ -25,10 +37,10 @@ Layer layer1 = {
   {screenWidth-3, screenHeight/2},
   {0,0}, {0,0},
   COLOR_WHITE,
-  &layer0
+  &layer2
 };
 
-Layer layer2 = {
+Layer layer0 = {
   (AbShape*)&circle3,
   {screenWidth/2, screenHeight/2},
   {0,0},{0,0},
@@ -36,7 +48,13 @@ Layer layer2 = {
   &layer1
 };
 
-int redrawScreen = 1;
+MovLayer ml0 = {&layer0, {1,2}, 0};
+
+int redrawScreen = 1;           /**< Boolean for whether screen needs to be redrawn */
+
+Region fieldFence;		/**< fence around playing field  */
+
+u_int bgColor = COLOR_RED;
 
 int main(){
   configureClocks();
@@ -44,11 +62,14 @@ int main(){
   shapeInit();
   p2sw_init(1);
 
+  layerInit(&layer0);
+  layerDraw(&layer0);
+  
+  layerGetBounds(&fieldLayer, &fieldFence);
+  
   enableWDTInterrupts();
   or_sr(0x8);
 
-  clearScreen(COLOR_RED);
-  
   for(;;){
     while(!redrawScreen){
       P1OUT &= ~GREEN_LED;
@@ -56,32 +77,20 @@ int main(){
     }
     P1OUT |= GREEN_LED;
     redrawScreen = 0;
-    layerDraw(&layer2);
+    movLayerDraw(&ml0, &layer0);
   }
 }
 
 void wdt_c_handler()
 {
-  static char state = 0;
   static short count = 0;
   P1OUT |= GREEN_LED;
   count++;
-  if(count == 1000){
-    switch(state){
-    case 0:
-      bgColor = COLOR_BLUE;
-      state = 1;
-      break;
-    case 1:
-      bgColor = COLOR_VIOLET;
-      state = 2;
-      break;
-    case 2:
-      bgColor = COLOR_RED;
-      state = 0;
-      break;
+  if(count == 15){
+    mlAdvance(&ml0, &fieldFence);
+    if(p2sw_read()){
+      redrawScreen = 1;
     }
-    redrawScreen = 1;
     count = 0;
   }
   P1OUT &= ~GREEN_LED;
