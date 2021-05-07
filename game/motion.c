@@ -2,6 +2,7 @@
 #include <shape.h>
 #include "motion.h"
 #include <lcdutils.h>
+#include "gameutils.h"
 
 void movLayerDraw(MovLayer *movLayers, Layer *layers)
 {
@@ -40,21 +41,47 @@ void movLayerDraw(MovLayer *movLayers, Layer *layers)
   } // for moving layer being updated
 }
 
-void mlAdvance(MovLayer *ml, Region *fence)
+void mlAdvance(MovLayer *ml, Region *fence, Region *slider1, Region *slider2)
 {
   Vec2 newPos;
   u_char axis;
   Region shapeBoundary;
+  
   for (; ml; ml = ml->next) {
     vec2Add(&newPos, &ml->layer->posNext, &ml->velocity);
     abShapeGetBounds(ml->layer->abShape, &newPos, &shapeBoundary);
     for (axis = 0; axis < 2; axis ++) {
       if ((shapeBoundary.topLeft.axes[axis] < fence->topLeft.axes[axis]) ||
-	  (shapeBoundary.botRight.axes[axis] > fence->botRight.axes[axis]) ) {
+	  (shapeBoundary.botRight.axes[axis] > fence->botRight.axes[axis])) {
 	int velocity = ml->velocity.axes[axis] = -ml->velocity.axes[axis];
 	newPos.axes[axis] += (2*velocity);
       }	/**< if outside of fence */
     } /**< for axis */
+
+    if((shapeBoundary.botRight.axes[0] > slider1->topLeft.axes[0]) ||
+       (shapeBoundary.topLeft.axes[0] < slider2->botRight.axes[0])){
+      int velocity = ml->velocity.axes[0] = -ml->velocity.axes[0];
+      newPos.axes[axis] += (2*velocity);
+    }
+    
     ml->layer->posNext = newPos;
   } /**< for ml */
+}
+
+void sliderAdvance(MovLayer *sliders, Region *fence){
+  Vec2 newPos;
+  u_char axis;
+  Region shapeBoundary;
+  for (; sliders; sliders = sliders->next) {
+    vec2AddSlider(&newPos, &sliders->layer->posNext, &sliders->velocity);
+    abShapeGetBounds(sliders->layer->abShape, &newPos, &shapeBoundary);
+    for (axis = 0; axis < 2; axis ++) {
+      if ((shapeBoundary.topLeft.axes[axis] < fence->topLeft.axes[axis]) ||
+	  (shapeBoundary.botRight.axes[axis] > fence->botRight.axes[axis]) ) {
+	int velocity = sliders->velocity.axes[axis] = -sliders->velocity.axes[axis];
+	newPos.axes[axis] += (2*velocity);
+      }	/**< if outside of fence */
+    } /**< for axis */
+    sliders->layer->posNext = newPos;
+  }
 }

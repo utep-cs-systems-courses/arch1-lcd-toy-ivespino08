@@ -26,7 +26,7 @@ Layer fieldLayer = {
 
 Layer layer2 = {
   (AbShape *)&rect0,
-  {2, screenHeight/2},
+  {12, screenHeight/2},
   {0,0}, {0,0},
   COLOR_GREEN,
   &fieldLayer
@@ -34,7 +34,7 @@ Layer layer2 = {
 
 Layer layer1 = {
   (AbShape*)&rect0,
-  {screenWidth-3, screenHeight/2},
+  {screenWidth-13, screenHeight/2},
   {0,0}, {0,0},
   COLOR_WHITE,
   &layer2
@@ -48,11 +48,15 @@ Layer layer0 = {
   &layer1
 };
 
-MovLayer ml0 = {&layer0, {1,2}, 0};
+MovLayer ml2 = {&layer2, {3,3}, 0};
+MovLayer ml1 = {&layer1, {3,3}, &ml2};
+MovLayer ml0 = {&layer0, {1,2}, &ml1};
 
 int redrawScreen = 1;           /**< Boolean for whether screen needs to be redrawn */
 
 Region fieldFence;		/**< fence around playing field  */
+Region slider1;
+Region slider2;
 
 u_int bgColor = COLOR_RED;
 
@@ -87,7 +91,14 @@ void wdt_c_handler()
   P1OUT |= GREEN_LED;
   count++;
   if(count == 15){
-    mlAdvance(&ml0, &fieldFence);
+    
+    ml0.next = 0;
+    sliderAdvance(&ml1, &fieldFence);
+    layerGetBounds(&layer1, &slider1);
+    layerGetBounds(&layer2, &slider2);
+    mlAdvance(&ml0, &fieldFence, &slider1, &slider2);
+    ml0.next = &ml1;
+    
     if(p2sw_read()){
       redrawScreen = 1;
     }
