@@ -3,6 +3,7 @@
 #include "motion.h"
 #include <lcdutils.h>
 #include "gameutils.h"
+#include "buzzer.h"
 
 void movLayerDraw(MovLayer *movLayers, Layer *layers)
 {
@@ -44,31 +45,37 @@ void movLayerDraw(MovLayer *movLayers, Layer *layers)
 void mlAdvance(MovLayer *ml, Region *fence, Region *slider1, Region *slider2)
 {
   Vec2 newPos;
-  u_char axis;
   Region shapeBoundary;
   
-  for (; ml; ml = ml->next) {
-    vec2Add(&newPos, &ml->layer->posNext, &ml->velocity);
-    abShapeGetBounds(ml->layer->abShape, &newPos, &shapeBoundary);
-    for (axis = 0; axis < 2; axis ++) {
-      if ((shapeBoundary.topLeft.axes[axis] < fence->topLeft.axes[axis]) ||
-	  (shapeBoundary.botRight.axes[axis] > fence->botRight.axes[axis])) {
-	int velocity = ml->velocity.axes[axis] = -ml->velocity.axes[axis];
-	newPos.axes[axis] += (2*velocity);
-      }	/**< if outside of fence */
-    } /**< for axis */
+  vec2Add(&newPos, &ml->layer->posNext, &ml->velocity);
+  abShapeGetBounds(ml->layer->abShape, &newPos, &shapeBoundary);
+  if ((shapeBoundary.topLeft.axes[1] < fence->topLeft.axes[1]) ||
+      (shapeBoundary.botRight.axes[1] > fence->botRight.axes[1])) {
+    buzzer_set_period(1000);
+    int velocity = ml->velocity.axes[1] = -ml->velocity.axes[1];
+    newPos.axes[1] += (2*velocity);
+  }	/**< if outside of fence */
 
-    if((shapeBoundary.botRight.axes[0] > slider1->topLeft.axes[0]) ||
-       (shapeBoundary.topLeft.axes[0] < slider2->botRight.axes[0])){
-      int velocity = ml->velocity.axes[0] = -ml->velocity.axes[0];
-      newPos.axes[axis] += (2*velocity);
-    }
+  if ((shapeBoundary.topLeft.axes[0] < fence->topLeft.axes[0]) ||
+	(shapeBoundary.botRight.axes[0] > fence->botRight.axes[0])) {
+    reset(ml->layer, &newPos);
+  }
+  
+  if(((shapeBoundary.botRight.axes[0] > slider1->topLeft.axes[0]) &&
+      (shapeBoundary.botRight.axes[1] < slider1->botRight.axes[1]) &&
+      (shapeBoundary.topLeft.axes[1] > slider1->topLeft.axes[1])) ||
+     ((shapeBoundary.topLeft.axes[0] < slider2->botRight.axes[0]) &&
+      (shapeBoundary.botRight.axes[1] < slider2->botRight.axes[1]) &&
+      (shapeBoundary.topLeft.axes[1] > slider2->topLeft.axes[1]))){
+    buzzer_set_period(1500);
+    int velocity = ml->velocity.axes[0] = -ml->velocity.axes[0];
+    newPos.axes[0] += (2*velocity);
+  }
     
-    ml->layer->posNext = newPos;
-  } /**< for ml */
-}
+  ml->layer->posNext = newPos;
+} /**< for ml */
 
-void sliderAdvance(MovLayer *sliders, Region *fence){
+void sliderAdvanceDown(MovLayer *sliders, Region *fence){
   Vec2 newPos;
   u_char axis;
   Region shapeBoundary;
@@ -78,8 +85,25 @@ void sliderAdvance(MovLayer *sliders, Region *fence){
     for (axis = 0; axis < 2; axis ++) {
       if ((shapeBoundary.topLeft.axes[axis] < fence->topLeft.axes[axis]) ||
 	  (shapeBoundary.botRight.axes[axis] > fence->botRight.axes[axis]) ) {
-	int velocity = sliders->velocity.axes[axis] = -sliders->velocity.axes[axis];
-	newPos.axes[axis] += (2*velocity);
+	newPos.axes[axis] = sliders->layer->pos.axes[axis];
+      }	/**< if outside of fence */
+    } /**< for axis */
+    sliders->layer->posNext = newPos;
+  }
+}
+
+void sliderAdvanceUp(MovLayer *sliders, Region *fence){
+  Vec2 newPos;
+  u_char axis;
+  Region shapeBoundary;
+  Vec2 velocity = {-sliders->velocity.axes[0] , -sliders->velocity.axes[1]};
+  for (; sliders; sliders = sliders->next) {
+    vec2AddSlider(&newPos, &sliders->layer->posNext, &velocity);
+    abShapeGetBounds(sliders->layer->abShape, &newPos, &shapeBoundary);
+    for (axis = 0; axis < 2; axis ++) {
+      if ((shapeBoundary.topLeft.axes[axis] < fence->topLeft.axes[axis]) ||
+	  (shapeBoundary.botRight.axes[axis] > fence->botRight.axes[axis]) ) {
+	newPos.axes[axis] = sliders->layer->pos.axes[axis];
       }	/**< if outside of fence */
     } /**< for axis */
     sliders->layer->posNext = newPos;

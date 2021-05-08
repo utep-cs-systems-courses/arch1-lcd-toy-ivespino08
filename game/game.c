@@ -6,6 +6,7 @@
 #include <shape.h>
 #include <abCircle.h>
 #include "motion.h"
+#include "buzzer.h"
 
 #define GREEN_LED BIT6
 
@@ -61,13 +62,23 @@ Region slider2;
 u_int bgColor = COLOR_RED;
 
 int main(){
+  P1DIR |= GREEN_LED;
+  P1OUT |= GREEN_LED;
+
   configureClocks();
   lcd_init();
   shapeInit();
-  p2sw_init(1);
+  p2sw_init(15);
+  buzzer_init();
 
   layerInit(&layer0);
   layerDraw(&layer0);
+
+  int p1score = 0;
+  int p2score = 0;
+  
+  drawString5x7(1,1, "player 1", COLOR_GREEN, COLOR_RED);
+  drawString5x7(screenWidth-60,1, "player 2", COLOR_GREEN, COLOR_RED);
   
   layerGetBounds(&fieldLayer, &fieldFence);
   
@@ -91,17 +102,37 @@ void wdt_c_handler()
   P1OUT |= GREEN_LED;
   count++;
   if(count == 15){
+    buzzer_set_period(0);
     
-    ml0.next = 0;
-    sliderAdvance(&ml1, &fieldFence);
+    u_int switches = p2sw_read();
+    u_int sw1 = 0;
+    u_int sw2 = 1;
+    u_int sw3 = 2;
+    u_int sw4 = 3;
+
+    ml1.next = 0;
+    
+    if(!(switches & (1<<sw1))){
+      sliderAdvanceUp(&ml2,&fieldFence);
+    }else if(!(switches & (1<<sw2))){
+      sliderAdvanceDown(&ml2,&fieldFence);
+    }
+    
+    if(!(switches & (1<<sw3))){
+      sliderAdvanceDown(&ml1,&fieldFence);
+    }else if(!(switches & (1<<sw4))){
+      sliderAdvanceUp(&ml1,&fieldFence);
+    }
+
+    ml1.next = &ml2;
     layerGetBounds(&layer1, &slider1);
     layerGetBounds(&layer2, &slider2);
     mlAdvance(&ml0, &fieldFence, &slider1, &slider2);
-    ml0.next = &ml1;
     
     if(p2sw_read()){
       redrawScreen = 1;
-    }
+    }	
+    
     count = 0;
   }
   P1OUT &= ~GREEN_LED;

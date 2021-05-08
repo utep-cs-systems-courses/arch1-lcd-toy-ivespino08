@@ -16,6 +16,8 @@ void movLayerDraw(MovLayer *movLayers, Layer *layers);
 
 void mlAdvance(MovLayer *ml, Region *fence, Region *slider1, Region *slider2);
 
-void sliderAdvance(MovLayer *sliders, Region *fence);
+void sliderAdvanceDown(MovLayer *sliders, Region *fence);
+
+void sliderAdvanceUp(MovLayer *sliders, Region *fence);
 
 #endif
