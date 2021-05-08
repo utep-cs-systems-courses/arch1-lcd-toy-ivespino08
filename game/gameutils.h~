@@ -1,0 +1,6 @@
+#ifndef gameutils-included
+#define gameutils-included
+
+#include "shape.h"
+
+void vec2AddSlider(Vec2 *result, const Vec2 *v1, const Vec2 *v2);

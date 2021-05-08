@@ -79,17 +79,15 @@ void sliderAdvanceDown(MovLayer *sliders, Region *fence){
   Vec2 newPos;
   u_char axis;
   Region shapeBoundary;
-  for (; sliders; sliders = sliders->next) {
-    vec2AddSlider(&newPos, &sliders->layer->posNext, &sliders->velocity);
-    abShapeGetBounds(sliders->layer->abShape, &newPos, &shapeBoundary);
-    for (axis = 0; axis < 2; axis ++) {
-      if ((shapeBoundary.topLeft.axes[axis] < fence->topLeft.axes[axis]) ||
-	  (shapeBoundary.botRight.axes[axis] > fence->botRight.axes[axis]) ) {
-	newPos.axes[axis] = sliders->layer->pos.axes[axis];
-      }	/**< if outside of fence */
-    } /**< for axis */
-    sliders->layer->posNext = newPos;
-  }
+  vec2AddSlider(&newPos, &sliders->layer->posNext, &sliders->velocity);
+  abShapeGetBounds(sliders->layer->abShape, &newPos, &shapeBoundary);
+  for (axis = 0; axis < 2; axis ++) {
+    if ((shapeBoundary.topLeft.axes[axis] < fence->topLeft.axes[axis]) ||
+	(shapeBoundary.botRight.axes[axis] > fence->botRight.axes[axis]) ) {
+      newPos.axes[axis] = sliders->layer->pos.axes[axis];
+    }	/**< if outside of fence */
+  } /**< for axis */
+  sliders->layer->posNext = newPos;
 }
 
 void sliderAdvanceUp(MovLayer *sliders, Region *fence){
@@ -97,15 +95,13 @@ void sliderAdvanceUp(MovLayer *sliders, Region *fence){
   u_char axis;
   Region shapeBoundary;
   Vec2 velocity = {-sliders->velocity.axes[0] , -sliders->velocity.axes[1]};
-  for (; sliders; sliders = sliders->next) {
-    vec2AddSlider(&newPos, &sliders->layer->posNext, &velocity);
-    abShapeGetBounds(sliders->layer->abShape, &newPos, &shapeBoundary);
-    for (axis = 0; axis < 2; axis ++) {
-      if ((shapeBoundary.topLeft.axes[axis] < fence->topLeft.axes[axis]) ||
-	  (shapeBoundary.botRight.axes[axis] > fence->botRight.axes[axis]) ) {
-	newPos.axes[axis] = sliders->layer->pos.axes[axis];
-      }	/**< if outside of fence */
-    } /**< for axis */
-    sliders->layer->posNext = newPos;
-  }
+  vec2AddSlider(&newPos, &sliders->layer->posNext, &velocity);
+  abShapeGetBounds(sliders->layer->abShape, &newPos, &shapeBoundary);
+  for (axis = 0; axis < 2; axis ++) {
+    if ((shapeBoundary.topLeft.axes[axis] < fence->topLeft.axes[axis]) ||
+	(shapeBoundary.botRight.axes[axis] > fence->botRight.axes[axis]) ) {
+      newPos.axes[axis] = sliders->layer->pos.axes[axis];
+    }	/**< if outside of fence */
+  } /**< for axis */
+  sliders->layer->posNext = newPos;
 }

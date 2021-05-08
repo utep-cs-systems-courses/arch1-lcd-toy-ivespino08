@@ -99,9 +99,8 @@ int main(){
 void wdt_c_handler()
 {
   static short count = 0;
-  P1OUT |= GREEN_LED;
   count++;
-  if(count == 15){
+  if(count == 10){
     buzzer_set_period(0);
     
     u_int switches = p2sw_read();
@@ -109,8 +108,6 @@ void wdt_c_handler()
     u_int sw2 = 1;
     u_int sw3 = 2;
     u_int sw4 = 3;
-
-    ml1.next = 0;
     
     if(!(switches & (1<<sw1))){
       sliderAdvanceUp(&ml2,&fieldFence);
@@ -124,16 +121,13 @@ void wdt_c_handler()
       sliderAdvanceUp(&ml1,&fieldFence);
     }
 
-    ml1.next = &ml2;
     layerGetBounds(&layer1, &slider1);
     layerGetBounds(&layer2, &slider2);
     mlAdvance(&ml0, &fieldFence, &slider1, &slider2);
     
     if(p2sw_read()){
       redrawScreen = 1;
-    }	
-    
+    }	    
     count = 0;
   }
-  P1OUT &= ~GREEN_LED;
 }
