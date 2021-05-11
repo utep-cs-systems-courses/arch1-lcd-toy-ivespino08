@@ -7,6 +7,7 @@
 #include <abCircle.h>
 #include "motion.h"
 #include "buzzer.h"
+#include "gameutils.h"
 
 #define GREEN_LED BIT6
 
@@ -54,6 +55,7 @@ MovLayer ml1 = {&layer1, {3,3}, &ml2};
 MovLayer ml0 = {&layer0, {1,2}, &ml1};
 
 int redrawScreen = 1;           /**< Boolean for whether screen needs to be redrawn */
+int state = 0;
 
 Region fieldFence;		/**< fence around playing field  */
 Region slider1;
@@ -73,9 +75,6 @@ int main(){
 
   layerInit(&layer0);
   layerDraw(&layer0);
-
-  int p1score = 0;
-  int p2score = 0;
   
   drawString5x7(1,1, "player 1", COLOR_GREEN, COLOR_RED);
   drawString5x7(screenWidth-60,1, "player 2", COLOR_GREEN, COLOR_RED);
@@ -101,7 +100,7 @@ void wdt_c_handler()
   static short count = 0;
   count++;
   if(count == 10){
-    buzzer_set_period(0);
+    check_state();
     
     u_int switches = p2sw_read();
     u_int sw1 = 0;

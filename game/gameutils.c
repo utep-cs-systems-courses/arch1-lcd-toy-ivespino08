@@ -2,6 +2,7 @@
 #include <p2switches.h>
 #include <lcddraw.h>
 #include "motion.h"
+#include "buzzer.h"
 
 void vec2AddSlider(Vec2 *result, const Vec2 *v1, const Vec2 *v2){
   result->axes[0] = v1->axes[0];
@@ -9,6 +10,7 @@ void vec2AddSlider(Vec2 *result, const Vec2 *v1, const Vec2 *v2){
 }
 
 void reset(Layer *ball, Vec2 *newPos){
+  buzzer_set_period(0);
   for(int axis = 0; axis < 2; axis++){ 
     ball->pos.axes[axis] = screenCenter.axes[axis];
     ball->posLast.axes[axis] = screenCenter.axes[axis];
